@@ -1,0 +1,91 @@
+name: mongo-sharding
+
+services:
+  mongo-config-srv:
+    image: dh-mirror.gitverse.ru/mongo:latest
+    container_name: mongo-config-srv
+    command:
+      [
+        "--configsvr",
+        "--replSet",
+        "mongo-config-srv",
+        "--bind_ip_all",
+        "--port",
+        "27117"
+      ]
+    ports:
+      - "27117:27117"
+    volumes:
+      - mongo-config-srv-data:/data/db
+
+  mongo-shard1:
+    container_name: mongo-shard1
+    image: dh-mirror.gitverse.ru/mongo:latest
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "mongo-shard1",
+        "--bind_ip_all",
+        "--port",
+        "27118"
+      ]
+    ports:
+      - "27118:27118"
+    volumes:
+      - mongo-shard1-data:/data/db
+
+  mongo-shard2:
+    container_name: mongo-shard2
+    image: dh-mirror.gitverse.ru/mongo:latest
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "mongo-shard2",
+        "--bind_ip_all",
+        "--port",
+        "27119"
+      ]
+    ports:
+      - "27119:27119"
+    volumes:
+      - mongo-shard2-data:/data/db
+
+  mongo-router:
+    image: dh-mirror.gitverse.ru/mongo:latest
+    container_name: mongo-router
+    depends_on:
+      - mongo-config-srv
+      - mongo-shard1
+      - mongo-shard2
+    command:
+      [
+        "mongos",
+        "--configdb",
+        "mongo-config-srv/mongo-config-srv:27117",
+        "--bind_ip_all",
+        "--port",
+        "27120"
+      ]
+    ports:
+      - "27120:27120"
+
+  pymongo_api:
+    container_name: pymongo_api
+    build: 
+      context: api_app
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo-router
+    ports:
+      - 8080:8080
+    environment:
+      MONGODB_URL: "mongodb://mongo-router:27120"
+      MONGODB_DATABASE_NAME: "somedb"
+
+volumes:
+  mongo-config-srv-data:
+  mongo-shard1-data:
+  mongo-shard2-data:
+
