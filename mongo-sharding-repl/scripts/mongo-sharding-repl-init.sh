@@ -23,6 +23,11 @@ rs.initiate({
 });
 MONGO
 
+until docker compose exec -T mongo-shard1-1 mongosh --port 27130 --quiet --eval "db.isMaster().ismaster" | grep true; do
+  echo waiting for shard1-1...
+  sleep 2;
+done
+
 echo "Init Shard 2..."
 docker compose exec -T mongo-shard2-1 mongosh --port 27140 --quiet <<MONGO
 rs.initiate({
@@ -35,8 +40,10 @@ rs.initiate({
 });
 MONGO
 
-echo "Await 10 sec..."
-sleep 10
+until docker compose exec -T mongo-shard2-1 mongosh --port 27140 --quiet --eval "db.isMaster().ismaster" | grep true; do
+  echo waiting for shard2-1...
+  sleep 2;
+done
 
 echo "Add shards to cluster..."
 docker compose exec -T mongo-router-repl mongosh --port 27120 --quiet <<MONGO

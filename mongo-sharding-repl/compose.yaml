@@ -147,9 +147,7 @@ services:
 
   pymongo_api-repl:
     container_name: pymongo_api-repl
-    build: 
-      context: api_app
-      dockerfile: Dockerfile
+    image: kazhem/pymongo_api:1.0.0
     depends_on:
       - mongo-router-repl
     ports:

@@ -23,3 +23,10 @@ docker compose up -d
 ## Доступные эндпоинты
 
 Список всех доступных эндпоинтов, swagger http://localhost:8080/docs
+
+## Очистка
+
+```shell
+docker compose down -v
+```
+ 
